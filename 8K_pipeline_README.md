@@ -17,12 +17,12 @@ Download raw 8-K filings from SEC EDGAR in batches.
 ## Step 2: Classify Financial vs. Non-Financial Firms
 
 ### Step 2.1: Download CIK-SIC Mapping
-**Script**: `1.1.1download_cik_sic_edgar.py`
+**Script**: `2.1.1download_cik_sic_edgar.py`
 
 Download the CIK-to-SIC mapping from EDGAR to identify firm industry codes.
 
 ### Step 2.2: Classify Firms
-**Script**: `1.1.2split_fin_nonfin.py`
+**Script**: `2.2split_fin_nonfin.py`
 
 Use SIC codes to separate financial firms from non-financial firms. Exclude financial firms from downstream processing.
 
@@ -30,7 +30,7 @@ Use SIC codes to separate financial firms from non-financial firms. Exclude fina
 
 ## Step 3: Classify Debt-Related 8-Ks
 
-**Script**: `8k_classifier_v2.py`
+**Script**: `3.8k_classifier.py`
 
 For each 8-K, classify along three dimensions: debt relevance, amendment status, and public bond status.
 
@@ -53,7 +53,7 @@ Read the 8-K main file and determine `amendment`:
 
 ## Step 4: Extract Debt Terms
 
-**Script**: `8k_debt_extractor_v4.py`
+**Script**: `4.8k_debt_extractor_v4.py`
 
 This script handles exhibit selection, new issuance flagging, public bond flagging, and extraction — all in one pipeline.
 
@@ -77,13 +77,13 @@ Extract terms for each debt-lender pair via separate API calls to ensure accurac
 ## Step 5: Clean Up
 
 ### Step 5.1: Coarse Deduplication
-**Script**: `dedup_debt_lender.py`
+**Script**: `5.1 dedup_debt_lender.py`
 
 - String matching on CSV fields.
 - LLM-based comparison of string similarity for fuzzy duplicates.
 
 ### Step 5.2: Re-classify Public Bonds and Revolving/Term Loan
-**Script**: `bond_classifier.py`
+**Script**: `5.2 bond_classifier.py`
 
 Split results into subgroups by instrument type:
 - Only revolving/term loan rows.
@@ -97,7 +97,7 @@ Run a second-pass public bond classification on the subgroups.
 - Watch for edge cases in the "other" category: warrants and stock purchase agreements (should be excluded); secured inventory-based revolving credit facilities (should be classified as revolving).
 
 ### Step 5.3: Check Fields
-**Script**: `check_fields.py`
+**Script**: `5.3 check_fields.py`
 
 Data quality checks on revolving/term loan rows only.
 
@@ -113,7 +113,7 @@ Verify extracted temporal and rate fields against source documents.
 Clean and standardize extracted amount fields.
 
 ### Step 5.4: Fine-Grained Deduplication
-**Script**: `dedup_revolving.py`
+**Script**: `5.4 dedup_revolving.py`
 
 Focus deduplication on filings where multiple documents were extracted under the same 8-K accession number — these are most likely to contain duplicates with different surface forms.
 
@@ -123,8 +123,7 @@ Focus deduplication on filings where multiple documents were extracted under the
 
 ## Open Questions / TODOs
 
-- [ ] Modifications (amendments) may be needed downstream — confirm whether amendment data captured in CSV is sufficient for later analysis.
-- [ ] `instrument_type` granularity: is a fine-grained split (revolving vs. term loan vs. bonds/notes) necessary, or is a coarser grouping sufficient?
+- [ ] `instrument_type` classification granularity: is a fine-grained split (revolving vs. term loan vs. bonds/notes) necessary, or is a coarser grouping sufficient?
 - [ ] Edge cases in "other" category: Swingline Commitments, Subordination Agreements (loan agreement present → can skip?).
 - [ ] Multi-debt, multi-lender extraction accuracy: validate that per-debt-lender API calls correctly isolate the right terms.
 - [ ] Stock purchase / warrant rows should be excluded from the debt dataset entirely.
