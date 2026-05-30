@@ -46,7 +46,7 @@ The three layers are applied in sequence; the first match terminates the check:
 
 3. **Body text keywords** — searches the narrative text for debt-specific terminology. High-specificity terms (e.g. *SOFR*, *senior notes*, *maturity date*, *administrative agent*) trigger classification alone; lower-specificity terms (e.g. *debt*, *collateral*, *covenants*) require two or more co-occurrences and the absence of counter-signals such as *earnings*, *press release*, or *employment agreement*.
 
-For full keyword lists, matching rules, and performance metrics, see [`debt_classification_detail.md`](3.1 debt_classification_detail.md).
+For full keyword lists, matching rules, and performance metrics, see [`debt_classification_detail.md`](3.1debt_classification_detail.md).
 
 
 ### 3.2 Public Bond Classification (`debt_related == True` rows only)
