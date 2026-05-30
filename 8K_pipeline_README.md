@@ -17,12 +17,12 @@ Download raw 8-K filings from SEC EDGAR in batches.
 ## Step 2: Classify Financial vs. Non-Financial Firms
 
 ### Step 2.1: Download CIK-SIC Mapping
-**Script**: `2.1.1download_cik_sic_edgar.py`
+**Script**: `2.1.download_cik_sic_edgar.py`
 
 Download the CIK-to-SIC mapping from EDGAR to identify firm industry codes.
 
 ### Step 2.2: Classify Firms
-**Script**: `2.2split_fin_nonfin.py`
+**Script**: `2.2.split_fin_nonfin.py`
 
 Use SIC codes to separate financial firms from non-financial firms. Exclude financial firms from downstream processing.
 
