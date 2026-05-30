@@ -35,11 +35,19 @@ Use SIC codes to separate financial firms from non-financial firms. Exclude fina
 For each 8-K, classify along three dimensions: debt relevance, amendment status, and public bond status.
 
 ### 3.1 Debt-Related Classification
-Read the 8-K main file and determine `debt_related`:
 
-> Set `debt_related = True` if this 8-K primarily or significantly concerns any debt instrument (bonds, notes, debentures, credit facilities, term loans, revolving credit, indentures, supplemental indentures, debt amendments, debt repayments, or any other borrowing arrangement). Set to `False` otherwise.
+Each 8-K main file (`MAIN_*.htm`) is classified as `debt_related = True` or `False` using a three-layer rule-based string matching pipeline — no API calls are made. The pipeline processes ~200 files per second, reducing a 30,000-filing dataset to a debt-relevant subset in under 5 minutes.
 
-Also extract: topic details, exhibit type.
+The three layers are applied in sequence; the first match terminates the check:
+
+1. **SEC Item number** — searches for `Item 2.03`, `Item 2.04`, or `Item 1.03` in the full text. These SEC-mandated headings unambiguously identify debt creation, debt acceleration/default events, and bankruptcy filings respectively.
+
+2. **Exhibit index keywords** — searches the `Item 9.01` exhibit listing for standardised document names (e.g. *Indenture*, *Credit Agreement*, *Term Loan*). Ambiguous terms such as *Purchase Agreement* and *Underwriting Agreement* require corroborating debt vocabulary in the filing body before triggering a positive classification.
+
+3. **Body text keywords** — searches the narrative text for debt-specific terminology. High-specificity terms (e.g. *SOFR*, *senior notes*, *maturity date*, *administrative agent*) trigger classification alone; lower-specificity terms (e.g. *debt*, *collateral*, *covenants*) require two or more co-occurrences and the absence of counter-signals such as *earnings*, *press release*, or *employment agreement*.
+
+For full keyword lists, matching rules, and performance metrics, see [`debt_classification_detail.md`](debt_classification_detail.md).
+
 
 ### 3.2 Public Bond Classification (`debt_related == True` rows only)
 Check exhibits for the presence of underwriting agreements or similar documents as a token-efficient proxy for identifying public bond offerings.
