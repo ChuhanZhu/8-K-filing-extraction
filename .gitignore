@@ -8,19 +8,19 @@ __pycache__/
 dist/
 build/
 
-# 虚拟环境
+
 venv/
 env/
 .env/
 .venv/
 
-# 环境变量 & 密钥（重要！）
+
 .env
 .env.local
 *.key
 secrets.json
 
-# 数据文件（8-K 原始文件通常很大）
+
 data/raw/
 data/processed/
 *.csv
@@ -41,6 +41,6 @@ data/processed/
 .idea/
 *.swp
 
-# 日志
+
 *.log
 logs/
