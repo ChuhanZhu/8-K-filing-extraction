@@ -70,8 +70,6 @@ For each debt/lender identified within a document:
 ### 4.3 Extraction at Debt-Lender Level
 Extract terms for each debt-lender pair via separate API calls to ensure accuracy when a filing contains multiple debts or multiple lenders.
 
-> **Open question**: How to guarantee that extracted rates/amounts are correctly matched to the right debt-lender pair when multiple are present in a single document?
-
 ---
 
 ## Step 5: Clean Up
