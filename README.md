@@ -49,13 +49,30 @@ The three layers are applied in sequence; the first match terminates the check:
 For full keyword lists, matching rules, and performance metrics, see [`3.1 debt_classification_detail.md`](3.1debt_classification_detail.md).
 
 
-### 3.2 Public Bond Classification (`debt_related == True` rows only)
-Check exhibits for the presence of underwriting agreements or similar documents as a token-efficient proxy for identifying public bond offerings.
+### 3.2 Public Bond Classification (`debt_related = True` rows only)
 
-### 3.3 Amendment Classification (`debt_related == True` rows only)
-Read the 8-K main file and determine `amendment`:
+Each debt-related filing is classified as `is_bond = True` or `False` using a two-step rule-based pipeline with no API calls.
 
-> Read this document and determine whether it primarily describes an AMENDMENT to an already-existing debt obligation (i.e., modifying rate, maturity, amount, covenants, or other terms of a prior agreement).
+First, the exhibit index (Item 9.01) is searched for bond-specific document names such as Indenture, Underwriting Agreement, Form of Note, and Legal Opinion. A match triggers is_bond = True, unless the exhibit section simultaneously contains loan-type document names (e.g. Credit Agreement, Term Loan, Promissory Note) and the filing body contains no bond-specific vocabulary. Second, if Step 1 does not return True, the narrative body text is searched for bond-specific terms including Rule 144A, senior notes, trustee, initial purchasers, and rate-and-maturity patterns such as 5.25% Senior Notes due 2031. Any single match triggers is_bond = True.
+
+For full keyword lists, matching rules, and performance details, see [`3.2_3.3_classification_detail.md`](3.2_3.3_classification_detail.md).
+
+---
+
+### 3.3 Amendment Classification (`debt_related = True` rows only)
+
+Each debt-related filing is classified as is_amendment = True or False in two steps.
+
+First, the exhibit index (Item 9.01) is searched for amendment-specific document names: Amendment, Amended and Restated, Restatement, Supplemental Indenture, First–Seventh Supplemental, Waiver, Modification Agreement, Forbearance, and First–Fifth Amendment. A match immediately sets is_amendment = True with no further checks — an explicit amendment document in the exhibit index is treated as definitive.
+
+Second, if no amendment exhibit is found, the narrative body text is searched for the same amendment terms. Here an anti-signal veto applies: if the body simultaneously contains new-issuance language (new notes, issuance of, new credit agreement, initial purchasers, underwriting), the match is overridden to is_amendment = False.
+
+For full keyword lists and performance metrics, see [`3.2_3.3_classification_detail.md`](3.2_3.3_classification_detail.md).
+
+
+### 3.4 Exhibit Type Extraction (all filings)
+
+Exhibit labels are extracted from every filing regardless of `debt_related` status. The plain text is split at the first occurrence of `Item 9.01` or *Financial Statements and Exhibits*, and the exhibit section is parsed line by line using a regex that captures the exhibit number and label verbatim from each line. Labels are not normalised. All labels for a given accession are joined with ` | ` and stored in the `exhibit_types` column. Duplicate entries are dropped.
 
 ---
 
