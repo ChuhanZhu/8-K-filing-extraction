@@ -30,7 +30,7 @@ Use SIC codes to separate financial firms from non-financial firms. Exclude fina
 
 ## Step 3: Classify Debt-Related 8-Ks
 
-**Script**: `3.8k_classifier.py`
+**Script**: `3.scan_debt_8k.py`
 
 For each 8-K, classify along three dimensions: debt relevance, amendment status, and public bond status.
 
