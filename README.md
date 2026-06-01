@@ -46,7 +46,7 @@ The three layers are applied in sequence; the first match terminates the check:
 
 3. **Body text keywords** — searches the narrative text for debt-specific terminology. High-specificity terms (e.g. *SOFR*, *senior notes*, *maturity date*, *administrative agent*) trigger classification alone; lower-specificity terms (e.g. *debt*, *collateral*, *covenants*) require two or more co-occurrences and the absence of counter-signals such as *earnings*, *press release*, or *employment agreement*.
 
-For full keyword lists, matching rules, and performance metrics, see [`3.1 debt_classification_detail.md`](3.1debt_classification_detail.md).
+For full keyword lists, matching rules, and performance metrics, see [`Step3.1 debt_classification_detail.md`](Step3.1debt_classification_detail.md).
 
 
 ### 3.2 Public Bond Classification (`debt_related = True` rows only)
@@ -55,7 +55,7 @@ Each debt-related filing is classified as `is_bond = True` or `False` using a tw
 
 First, the exhibit index (Item 9.01) is searched for bond-specific document names such as Indenture, Underwriting Agreement, Form of Note, and Legal Opinion. A match triggers is_bond = True, unless the exhibit section simultaneously contains loan-type document names (e.g. Credit Agreement, Term Loan, Promissory Note) and the filing body contains no bond-specific vocabulary. Second, if Step 1 does not return True, the narrative body text is searched for bond-specific terms including Rule 144A, senior notes, trustee, initial purchasers, and rate-and-maturity patterns such as 5.25% Senior Notes due 2031. Any single match triggers is_bond = True.
 
-For full keyword lists, matching rules, and performance details, see [`3.2_3.3_classification_detail.md`](3.2_3.3_classification_detail.md).
+For full keyword lists, matching rules, and performance details, see [`Step3.2_3.3_classification_detail.md`](Step3.2_3.3_classification_detail.md).
 
 ---
 
@@ -67,7 +67,7 @@ First, the exhibit index (Item 9.01) is searched for amendment-specific document
 
 Second, if no amendment exhibit is found, the narrative body text is searched for the same amendment terms. Here an anti-signal veto applies: if the body simultaneously contains new-issuance language (new notes, issuance of, new credit agreement, initial purchasers, underwriting), the match is overridden to is_amendment = False.
 
-For full keyword lists and performance metrics, see [`3.2_3.3_classification_detail.md`](3.2_3.3_classification_detail.md).
+For full keyword lists and performance metrics, see [`Step3.2_3.3_classification_detail.md`](Step3.2_3.3_classification_detail.md).
 
 
 ### 3.4 Exhibit Type Extraction (all filings)
@@ -106,7 +106,7 @@ Files where `skipped == False` are extracted — directly reflecting the Phase 2
 
 **Field extraction (Step 3):** Only new issuances proceed to extraction. Non-new-issuance instruments are still recorded but with extraction fields left blank. Fields extracted: `instrument_type1` (name as it appears in the document), `instrument_type2` (classify as Revolving or Term Loan), `lender_name`, `lending_amount`, `rate`, `maturity_date`, `issuing_date`. Each field has a corresponding verbatim evidence column.
 
-See [`step4_detail.md`](`step4_detail.md`) for full field-level documentation of all output files.
+See [`Step4_detail.md`](`Step4_detail.md`) for full field-level documentation of all output files.
 
 ---
 
