@@ -106,7 +106,7 @@ Files where `skipped == False` are extracted — directly reflecting the Phase 2
 
 **Field extraction (Step 3):** Only new issuances proceed to extraction. Non-new-issuance instruments are still recorded but with extraction fields left blank. Fields extracted: `instrument_type1` (name as it appears in the document), `instrument_type2` (classify as Revolving or Term Loan), `lender_name`, `lending_amount`, `rate`, `maturity_date`, `issuing_date`. Each field has a corresponding verbatim evidence column.
 
-See `step4_detail.md` for full field-level documentation of all output files.
+See [`step4_detail.md`](`step4_detail.md`) for full field-level documentation of all output files.
 
 ---
 
