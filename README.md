@@ -76,24 +76,37 @@ Exhibit labels are extracted from every filing regardless of `debt_related` stat
 
 ---
 
-## Step 4: Extract Debt Terms
-
+## Step 4: Extract Debt Terms (LLM)
 **Script**: `4.8k_debt_extractor_v4.py`
 
-This script handles exhibit selection, new issuance flagging, public bond flagging, and extraction — all in one pipeline.
+This script screens, classifies, and extract revolving/term loan terms from 8-K filings.
 
-### 4.1 Exhibit Selection
-- **Skip** filings classified as amendments or public bonds (from Step 3).
-- **Exhibit priority**: If an agreement document exists, extract from the agreement only. If no agreement exists, fall back to the 8-K main file. Always skip opinion, consent, and press release documents.
+### Phase 1 — Main File Screening
+Each 8-K main file is passed to the LLM in a single call that answers three questions:
 
-### 4.2 New Issuance & Public Bond Flags
-For each debt/lender identified within a document:
-- Flag whether it is a **new issuance** (vs. a historical debt mentioned in passing).
-- Flag whether it is a **public bond**.
-- Only proceed to extraction if both flags are `False`.
+**Is it debt-related?** This step uses LLM to further categorize 'debt_related' 8-K filings. `8-K_topic` describes what the filing is actually about. If not debt-related, the remaining two questions are not answered.
 
-### 4.3 Extraction at Debt-Lender Level
-Extract terms for each debt-lender pair via separate API calls to ensure accuracy when a filing contains multiple debts or multiple lenders.
+**Is it an amendment?** This step uses LLM to further categorize 'amendment' for debt_related 8-K filings. Filings that modify or waive terms of an existing debt instrument are flagged and skipped.
+
+**What type of new debt instrument does it describe?** Classified by the type of debt *newly issued* in this filing — a draw-down or reference to an existing facility does not qualify. Priority order: `revolving_term_loan` → `public_bonds` → `notes` → `others`. Only filings classified as `revolving_term_loan` proceed to *phase 2*.
+
+### Phase 2 — Exhibit Classification
+For each 8-K (non-amendment revolving/term loan related 8-K) that passed Phase 1, all non-main files in the same directory are read and classified by the LLM. The label (`file_type_label`) is extracted directly from the document's own title or opening lines. Each file is also flagged for `is_loan_agreement`: whether it is a primary agreement governing a revolving credit facility or term loan (Credit Agreement, Loan and Security Agreement, and variants).
+
+The main file is added as a record without an LLM call, identified by its `MAIN_` prefix.
+
+Once all files in a filing are classified, a `skipped` flag is set for every file:
+- If any exhibit is a loan agreement → only the loan agreement file(s) are marked `skipped = False`; all other files including the main file are marked `skipped = True`.
+- If no loan agreement exists → only the main file is marked `skipped = False`; all exhibits are marked `skipped = True`.
+
+### Phase 3 — Debt Extraction
+Files where `skipped == False` are extracted — directly reflecting the Phase 2 logic above.
+
+**Instrument and lender identification (Step 2):** The LLM reads the full file and identifies all debt instruments, flagging each as a new issuance or a reference to an existing one. For each instrument it also identifies lenders (excluding arrangers, bookrunners, trustees, and guarantors), and whether their commitment amount is stated individually or shared across the syndicate.
+
+**Field extraction (Step 3):** Only new issuances proceed to extraction. Non-new-issuance instruments are still recorded but with extraction fields left blank. Fields extracted: `instrument_type1` (name as it appears in the document), `instrument_type2` (classify as Revolving or Term Loan), `lender_name`, `lending_amount`, `rate`, `maturity_date`, `issuing_date`. Each field has a corresponding verbatim evidence column.
+
+See `step4_detail.md` for full field-level documentation of all output files.
 
 ---
 
