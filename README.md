@@ -112,48 +112,12 @@ See [`Step4_detail.md`](Step4_detail.md) for full field-level documentation of a
 
 ## Step 5: Clean Up
 
-### Step 5.1: Coarse Deduplication
-**Script**: `5.1 dedup_debt_lender.py`
+### Step 5.1: Cross-File Deduplication （LLM)
+**Script**: `5.1.dedup_debt_lender.py`
 
-- String matching on CSV fields.
-- LLM-based comparison of string similarity for fuzzy duplicates.
+For 8-K filings where lender rows were extracted from multiple source files under the same accession, the LLM compares rows across files and identifies the less complete file — signals include fewer lenders covered, aggregated-only amounts, and fewer fields populated. All overlapping rows from that file are marked `is_repeat=True`, retaining the more detailed source agreement exhibit over summary documents (main filing, press release). Single-file groups pass through unchanged.
 
-### Step 5.2: Re-classify Public Bonds and Revolving/Term Loan
-**Script**: `5.2 bond_classifier.py`
-
-Split results into subgroups by instrument type:
-- Only revolving/term loan rows.
-- Only bonds/notes/other rows.
-- Mixed rows.
-
-Run a second-pass public bond classification on the subgroups.
-
-**Manual checks on `public_bonds == False` rows:**
-- Private placement notes should not be classified as public bonds.
-- Watch for edge cases in the "other" category: warrants and stock purchase agreements (should be excluded); secured inventory-based revolving credit facilities (should be classified as revolving).
-
-### Step 5.3: Check Fields
-**Script**: `5.3 check_fields.py`
-
-Data quality checks on revolving/term loan rows only.
-
-#### 5.3.1 Check Instrument Type
-**Manual checks:**
-- `(cik 1018724, accession 119312517205287)` — flagged as merger, review classification.
-- Bridge facilities: should not be classified as term loans.
-
-#### 5.3.2 Check Rate, Maturity Date, Issuance Date
-Verify extracted temporal and rate fields against source documents.
-
-#### 5.3.3 Check Amount
-Clean and standardize extracted amount fields.
-
-### Step 5.4: Fine-Grained Deduplication
-**Script**: `5.4 dedup_revolving.py`
-
-Focus deduplication on filings where multiple documents were extracted under the same 8-K accession number — these are most likely to contain duplicates with different surface forms.
-
-> **Future improvement**: More precise exhibit selection upstream (e.g., skipping the main file when an agreement is available) would reduce the deduplication burden here.
+> **Future improvement**: Selecting only the most detailed exhibit upstream would reduce the cross-file overlaps that need to be resolved here.
 
 ---
 
