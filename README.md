@@ -49,46 +49,25 @@ The three layers are applied in sequence; the first match terminates the check:
 For full keyword lists, matching rules, and performance metrics, see [`Step3.1 debt_classification_detail.md`](Step3.1debt_classification_detail.md).
 
 
-### 3.2 Public Bond Classification (`debt_related = True` rows only)
-
-Each debt-related filing is classified as `is_bond = True` or `False` using a two-step rule-based pipeline with no API calls.
-
-First, the exhibit index (Item 9.01) is searched for bond-specific document names such as Indenture, Underwriting Agreement, Form of Note, and Legal Opinion. A match triggers is_bond = True, unless the exhibit section simultaneously contains loan-type document names (e.g. Credit Agreement, Term Loan, Promissory Note) and the filing body contains no bond-specific vocabulary. Second, if Step 1 does not return True, the narrative body text is searched for bond-specific terms including Rule 144A, senior notes, trustee, initial purchasers, and rate-and-maturity patterns such as 5.25% Senior Notes due 2031. Any single match triggers is_bond = True.
-
-For full keyword lists, matching rules, and performance details, see [`Step3.2_3.3_classification_detail.md`](Step3.2_3.3_classification_detail.md).
-
----
-
-### 3.3 Amendment Classification (`debt_related = True` rows only)
-
-Each debt-related filing is classified as is_amendment = True or False in two steps.
-
-First, the exhibit index (Item 9.01) is searched for amendment-specific document names: Amendment, Amended and Restated, Restatement, Supplemental Indenture, First–Seventh Supplemental, Waiver, Modification Agreement, Forbearance, and First–Fifth Amendment. A match immediately sets is_amendment = True with no further checks — an explicit amendment document in the exhibit index is treated as definitive.
-
-Second, if no amendment exhibit is found, the narrative body text is searched for the same amendment terms. Here an anti-signal veto applies: if the body simultaneously contains new-issuance language (new notes, issuance of, new credit agreement, initial purchasers, underwriting), the match is overridden to is_amendment = False.
-
-For full keyword lists and performance metrics, see [`Step3.2_3.3_classification_detail.md`](Step3.2_3.3_classification_detail.md).
-
-
-### 3.4 Exhibit Type Extraction (all filings)
+### 3.4 Exhibit Type Extraction (all filings) (need to be modified)
 
 Exhibit labels are extracted from every filing regardless of `debt_related` status. The plain text is split at the first occurrence of `Item 9.01` or *Financial Statements and Exhibits*, and the exhibit section is parsed line by line using a regex that captures the exhibit number and label verbatim from each line. Labels are not normalised. All labels for a given accession are joined with ` | ` and stored in the `exhibit_types` column. Duplicate entries are dropped.
 
 ---
 
 ## Step 4: Extract Debt Terms (LLM)
-**Script**: `4.8k_debt_extractor_v4.py`
+**Script**: `4.debt_identify_classify.py`
 
-This script screens, classifies, and extract revolving/term loan terms from 8-K filings.
+This script screens, classifies, and extract new issued revolving/term loan terms from 8-K filings.
 
-### Phase 1 — Main File Screening
-Each 8-K main file is passed to the LLM in a single call that answers three questions:
+### Phase 1 — Main File Screening and extract new issued debts
+Each 8-K main file is passed to the LLM in a single call that extracts all new issued debts and classifies these debts (revolving/term loan, public bonds, notes, others):
 
-**Is it debt-related?** This step uses LLM to further categorize 'debt_related' 8-K filings. `8-K_topic` describes what the filing is actually about. If not debt-related, the remaining two questions are not answered.
+1. The LLM reads the full Main file and identifies all debt instruments, flagging each as a new issuance or a reference to an existing one.
 
-**Is it an amendment?** This step uses LLM to further categorize 'amendment' for debt_related 8-K filings. Filings that modify or waive terms of an existing debt instrument are flagged and skipped.
+2. **What type of new debt instrument does it describe?** Classified by the type of debt *newly issued* in this filing — a draw-down or reference to an existing facility does not qualify. Priority order: `revolving_term_loan` → `public_bonds` → `notes` → `others`. Only filings classified as `revolving_term_loan` proceed to *phase 2*.
 
-**What type of new debt instrument does it describe?** Classified by the type of debt *newly issued* in this filing — a draw-down or reference to an existing facility does not qualify. Priority order: `revolving_term_loan` → `public_bonds` → `notes` → `others`. Only filings classified as `revolving_term_loan` proceed to *phase 2*.
+
 
 ### Phase 2 — Exhibit Classification
 For each 8-K (non-amendment revolving/term loan related 8-K) that passed Phase 1, all non-main files in the same directory are read and classified by the LLM. The label (`file_type_label`) is extracted directly from the document's own title or opening lines. Each file is also flagged for `is_loan_agreement`: whether it is a primary agreement governing a revolving credit facility or term loan (Credit Agreement, Loan and Security Agreement, and variants).
